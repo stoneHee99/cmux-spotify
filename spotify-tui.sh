@@ -147,12 +147,13 @@ render() {
 
   info=$(get_all_info)
 
-  state=$(printf '%s' "$info" | awk -F"$SEP" '{print $1}')
-  track=$(printf '%s' "$info" | awk -F"$SEP" '{print $2}')
-  artist=$(printf '%s' "$info" | awk -F"$SEP" '{print $3}')
-  album=$(printf '%s' "$info" | awk -F"$SEP" '{print $4}')
-  pos=$(printf '%s' "$info" | awk -F"$SEP" '{print $5}')
-  dur=$(printf '%s' "$info" | awk -F"$SEP" '{print $6}')
+  # Parse all fields in one pass using parameter expansion (no subprocesses)
+  state="${info%%$SEP*}"; info="${info#*$SEP}"
+  track="${info%%$SEP*}"; info="${info#*$SEP}"
+  artist="${info%%$SEP*}"; info="${info#*$SEP}"
+  album="${info%%$SEP*}"; info="${info#*$SEP}"
+  pos="${info%%$SEP*}"; info="${info#*$SEP}"
+  dur="$info"
 
   pos=${pos:-0}
   dur=${dur:-1}

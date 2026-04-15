@@ -1,6 +1,11 @@
 #!/bin/sh
 # launch.sh
 # Creates a Spotify workspace in cmux at the bottom of the sidebar.
+# Safe to call multiple times — skips if already running.
+
+if pgrep -f spotify-tui.sh >/dev/null 2>&1; then
+  exit 0
+fi
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
