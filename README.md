@@ -35,11 +35,9 @@ Creates a dedicated Spotify workspace at the bottom of your cmux sidebar.
 - Track, artist, album display with progress bar
 - Keyboard controls: `space` play/pause, `n` next, `p` previous, `q` quit
 
-<!-- TUI screenshot: uncomment when assets/tui-player.png is added
 <p align="center">
   <img src="assets/tui-player.png" width="600" />
 </p>
--->
 
 Automatically hides when Spotify is not running.
 
