@@ -1,85 +1,65 @@
-# claude-code-spotify
+# cmux-spotify
 
-Show your currently playing Spotify track in [Claude Code](https://docs.anthropic.com/en/docs/claude-code)'s status line.
+Show your currently playing Spotify track in [cmux](https://cmux.dev)'s sidebar — right next to your Claude Code session.
 
-```
-bagseoghui@host  ~/project  ⎇ main  Opus 4.6  ctx:25%  ♫ Dynamite - BTS  14:30:00
-                                                        ^^^^^^^^^^^^^^^^^^^^^^^^
-```
+![Spotify Green](https://img.shields.io/badge/Spotify-1DB954?style=flat&logo=spotify&logoColor=white)
+![macOS](https://img.shields.io/badge/macOS-000000?style=flat&logo=apple&logoColor=white)
+![Linux](https://img.shields.io/badge/Linux-FCC624?style=flat&logo=linux&logoColor=black)
+![Windows](https://img.shields.io/badge/Windows-0078D6?style=flat&logo=windows&logoColor=white)
 
-## Features
+## What it does
 
-- Displays the current track and artist in Claude Code's bottom status bar
-- Shows `♫` when playing, `⏸` when paused
-- Disappears when Spotify is not running
-- Cross-platform: **macOS**, **Linux**, and **Windows**
+A background script that polls Spotify and updates the cmux sidebar in real time.
+
+- `♫ Track - Artist` in Spotify green (`#1DB954`) when playing
+- `⏸ Track - Artist` in gray when paused
+- Automatically clears when Spotify is closed
+- Configurable poll interval (default: 3 seconds)
 
 ## Installation
 
-### 1. Download the script
+### 1. Download
 
 ```bash
-# macOS / Linux
-curl -o ~/.claude/spotify-now-playing.sh \
-  https://raw.githubusercontent.com/stoneHee99/claude-code-spotify/main/spotify-now-playing.sh
-chmod +x ~/.claude/spotify-now-playing.sh
+curl -o ~/.cmux-spotify.sh \
+  https://raw.githubusercontent.com/stoneHee99/cmux-spotify/main/cmux-spotify.sh
+chmod +x ~/.cmux-spotify.sh
 ```
 
-```powershell
-# Windows (PowerShell)
-Invoke-WebRequest -Uri "https://raw.githubusercontent.com/stoneHee99/claude-code-spotify/main/spotify-now-playing.ps1" `
-  -OutFile "$env:USERPROFILE\.claude\spotify-now-playing.ps1"
-```
-
-### 2. Configure Claude Code
-
-Add the following to your Claude Code `settings.json`:
-
-**macOS / Linux** (`~/.claude/settings.json`)
-
-```json
-{
-  "statusLine": {
-    "type": "command",
-    "command": "sh ~/.claude/spotify-now-playing.sh"
-  }
-}
-```
-
-**Windows** (`%USERPROFILE%\.claude\settings.json`)
-
-```json
-{
-  "statusLine": {
-    "type": "command",
-    "command": "powershell -NoProfile -File %USERPROFILE%\\.claude\\spotify-now-playing.ps1"
-  }
-}
-```
-
-### 3. Restart Claude Code
-
-Restart Claude Code and play something on Spotify. You should see the track info in the status bar.
-
-## Integrating with an existing status line
-
-If you already have a custom `statusline-command.sh`, add this snippet:
+### 2. Run
 
 ```bash
-# Spotify now playing
-spotify=$(sh ~/.claude/spotify-now-playing.sh 2>/dev/null)
-if [ -n "$spotify" ]; then
-  out="${out}  $(printf '\033[36m%s\033[0m' "$spotify")"
+# Start in background
+nohup ~/.cmux-spotify.sh &
+
+# Or with a custom interval (seconds)
+nohup ~/.cmux-spotify.sh --interval 2 &
+```
+
+### 3. Auto-start (optional)
+
+To start automatically when you open cmux, add to your shell profile (`~/.zshrc` or `~/.bashrc`):
+
+```bash
+# Start cmux-spotify if inside cmux and not already running
+if [ -n "$CMUX_WORKSPACE_ID" ] && ! pgrep -f cmux-spotify.sh >/dev/null; then
+  nohup ~/.cmux-spotify.sh >/dev/null 2>&1 &
 fi
 ```
 
-## Platform details
+### Stop
+
+```bash
+pkill -f cmux-spotify.sh
+```
+
+## Platform support
 
 | OS | Method | Requirements |
 |---|---|---|
 | macOS | AppleScript (`osascript`) | Spotify desktop app |
-| Linux | [playerctl](https://github.com/altdesktop/playerctl) (MPRIS/D-Bus) | `playerctl` installed, Spotify desktop app |
-| Windows | Window title reading | Spotify desktop app |
+| Linux | [playerctl](https://github.com/altdesktop/playerctl) (MPRIS/D-Bus) | `playerctl`, Spotify desktop app |
+| Windows | Window title reading (via PowerShell) | Spotify desktop app, Git Bash or WSL |
 
 ### Linux: Install playerctl
 
@@ -94,13 +74,29 @@ sudo pacman -S playerctl
 sudo dnf install playerctl
 ```
 
-### Windows limitation
+### Windows note
 
-When Spotify is paused, the window title changes to just "Spotify", so the track name is not available in paused state. Only `⏸ Spotify` is shown.
+When Spotify is paused on Windows, the window title changes to just "Spotify", so the track name is not available in paused state.
 
 ## How it works
 
-The script checks if Spotify is running, reads the current playback state and track info using OS-native methods, and outputs a single line of text. Claude Code's status line picks up this output and displays it at the bottom of the terminal.
+The script runs a simple loop:
+
+1. Check if Spotify is running
+2. Read the current track, artist, and playback state using OS-native methods
+3. Call `cmux set-status spotify "..."` to update the sidebar
+4. Sleep for the configured interval
+5. On exit (`Ctrl+C` / `kill`), automatically clears the status via `cmux clear-status`
+
+Only updates the sidebar when the track actually changes, so it's lightweight.
+
+## cmux commands used
+
+```bash
+cmux set-status spotify "♫ Track - Artist" --color "#1DB954"  # set
+cmux clear-status spotify                                      # clear
+cmux list-status                                               # check
+```
 
 ## License
 
