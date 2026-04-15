@@ -18,9 +18,7 @@ if [ -z "$ws" ]; then
 fi
 
 # Rename to Spotify
-cmux rename-workspace --workspace "$ws" "Spotify" 2>/dev/null
+cmux rename-workspace --workspace "$ws" "Spotify" >/dev/null 2>&1
 
 # Move to the very bottom
-cmux reorder-workspace --workspace "$ws" --index 9999 2>/dev/null
-
-echo "Spotify workspace created: $ws"
+cmux reorder-workspace --workspace "$ws" --index 9999 >/dev/null 2>&1
