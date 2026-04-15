@@ -7,6 +7,7 @@
 OS="$(uname -s)"
 INTERVAL=1
 WS_ID="$CMUX_WORKSPACE_ID"
+SEP=$(printf '\036')  # ASCII Record Separator — safe delimiter
 
 # ── Spotify helpers ──────────────────────────────────────────
 
@@ -14,32 +15,33 @@ get_all_info() {
   case "$OS" in
     Darwin)
       if ! pgrep -x "Spotify" >/dev/null 2>&1; then
-        echo "stopped|||0|1"
+        printf 'stopped\036\036\0360\0361'
         return
       fi
       osascript -e '
         tell application "Spotify"
+          set sep to ASCII character 30
           set s to player state as string
           if s is "stopped" then
-            return s & "|||0|1"
+            return s & sep & sep & sep & "0" & sep & "1"
           end if
           set t to name of current track
           set a to artist of current track
           set al to album of current track
           set p to player position
           set d to duration of current track
-          return s & "|" & t & "|" & a & "|" & al & "|" & (round p) & "|" & (round (d / 1000))
+          return s & sep & t & sep & a & sep & al & sep & (round p) & sep & (round (d / 1000))
         end tell
       ' 2>/dev/null
       ;;
     Linux)
       if ! command -v playerctl >/dev/null 2>&1; then
-        echo "stopped|||0|1"
+        printf 'stopped\036\036\0360\0361'
         return
       fi
       state=$(playerctl -p spotify status 2>/dev/null | tr '[:upper:]' '[:lower:]')
       if [ "$state" != "playing" ] && [ "$state" != "paused" ]; then
-        echo "stopped|||0|1"
+        printf 'stopped\036\036\0360\0361'
         return
       fi
       track=$(playerctl -p spotify metadata title 2>/dev/null)
@@ -47,10 +49,10 @@ get_all_info() {
       album=$(playerctl -p spotify metadata album 2>/dev/null)
       pos=$(playerctl -p spotify position 2>/dev/null | cut -d. -f1)
       dur=$(playerctl -p spotify metadata mpris:length 2>/dev/null | awk '{printf "%.0f", $1/1000000}')
-      echo "$state|$track|$artist|$album|${pos:-0}|${dur:-1}"
+      printf '%s\036%s\036%s\036%s\036%s\036%s' "$state" "$track" "$artist" "$album" "${pos:-0}" "${dur:-1}"
       ;;
     *)
-      echo "stopped|||0|1"
+      printf 'stopped\036\036\0360\0361'
       ;;
   esac
 }
@@ -89,13 +91,13 @@ SCROLLED=""
 
 update_marquee() {
   text="$1"
-  MARQUEE_LEN=$(printf '%s' "$text" | awk '{print length}')
+  MARQUEE_LEN=$(printf '%s' "$text" | python3 -c "import sys; print(len(sys.stdin.read()))")
   if [ "$MARQUEE_LEN" -le "$MARQUEE_MAX" ]; then
     SCROLLED="$text"
     return
   fi
   padded="${text}   ·   ${text}"
-  SCROLLED=$(printf '%s' "$padded" | awk -v s=$((MARQUEE_OFFSET + 1)) -v l=$MARQUEE_MAX '{print substr($0, s, l)}')
+  SCROLLED=$(printf '%s' "$padded" | python3 -c "import sys; t=sys.stdin.read(); print(t[$MARQUEE_OFFSET:$MARQUEE_OFFSET+$MARQUEE_MAX], end='')")
   total=$((MARQUEE_LEN + 7))
   MARQUEE_OFFSET=$(( (MARQUEE_OFFSET + 1) % total ))
 }
@@ -145,12 +147,12 @@ render() {
 
   info=$(get_all_info)
 
-  state=$(echo "$info" | cut -d'|' -f1)
-  track=$(echo "$info" | cut -d'|' -f2)
-  artist=$(echo "$info" | cut -d'|' -f3)
-  album=$(echo "$info" | cut -d'|' -f4)
-  pos=$(echo "$info" | cut -d'|' -f5)
-  dur=$(echo "$info" | cut -d'|' -f6)
+  state=$(printf '%s' "$info" | awk -F"$SEP" '{print $1}')
+  track=$(printf '%s' "$info" | awk -F"$SEP" '{print $2}')
+  artist=$(printf '%s' "$info" | awk -F"$SEP" '{print $3}')
+  album=$(printf '%s' "$info" | awk -F"$SEP" '{print $4}')
+  pos=$(printf '%s' "$info" | awk -F"$SEP" '{print $5}')
+  dur=$(printf '%s' "$info" | awk -F"$SEP" '{print $6}')
 
   pos=${pos:-0}
   dur=${dur:-1}
