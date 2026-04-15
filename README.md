@@ -1,11 +1,25 @@
-# cmux-spotify
+<p align="center">
+  <img src="assets/logo.png" width="120" />
+</p>
 
-A Spotify mini-player that lives inside [cmux](https://cmux.dev)'s sidebar.
+<h1 align="center">cmux-spotify</h1>
 
-![Spotify Green](https://img.shields.io/badge/Spotify-1DB954?style=flat&logo=spotify&logoColor=white)
-![macOS](https://img.shields.io/badge/macOS-000000?style=flat&logo=apple&logoColor=white)
-![Linux](https://img.shields.io/badge/Linux-FCC624?style=flat&logo=linux&logoColor=black)
-![Shell Script](https://img.shields.io/badge/Shell-Script-121011?style=flat&logo=gnu-bash&logoColor=white)
+<p align="center">
+  A Spotify mini-player that lives inside <a href="https://cmux.dev">cmux</a>'s sidebar.
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/Spotify-1DB954?style=flat&logo=spotify&logoColor=white" />
+  <img src="https://img.shields.io/badge/macOS-000000?style=flat&logo=apple&logoColor=white" />
+  <img src="https://img.shields.io/badge/Linux-FCC624?style=flat&logo=linux&logoColor=black" />
+  <img src="https://img.shields.io/badge/Shell-Script-121011?style=flat&logo=gnu-bash&logoColor=white" />
+</p>
+
+<!-- demo GIF: uncomment when assets/demo.gif is added
+<p align="center">
+  <img src="assets/demo.gif" width="800" />
+</p>
+-->
 
 ## What it does
 
@@ -20,6 +34,12 @@ Creates a dedicated Spotify workspace at the bottom of your cmux sidebar.
 **Click into it** — interactive TUI player:
 - Track, artist, album display with progress bar
 - Keyboard controls: `space` play/pause, `n` next, `p` previous, `q` quit
+
+<!-- TUI screenshot: uncomment when assets/tui-player.png is added
+<p align="center">
+  <img src="assets/tui-player.png" width="600" />
+</p>
+-->
 
 Automatically hides when Spotify is not running.
 
