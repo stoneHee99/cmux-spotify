@@ -139,7 +139,21 @@ update_sidebar() {
   fi
 }
 
+# ── Progress bar builder ────────────────────────────────────
+
+build_bar() {
+  filled="$1"
+  empty="$2"
+  # Use printf repeat instead of while loop
+  bar_filled=$(printf "%${filled}s" | sed 's/ /━/g')
+  bar_empty=$(printf "%${empty}s" | sed 's/ /─/g')
+  printf '%s●%s' "$bar_filled" "$bar_empty"
+}
+
 # ── Render TUI (flicker-free) ────────────────────────────────
+
+CACHED_COLS=0
+COLS_TICK=0
 
 render() {
   # Move cursor to top-left instead of clearing
@@ -171,9 +185,12 @@ render() {
   pos_fmt=$(format_time "$pos")
   dur_fmt=$(format_time "$dur")
 
-  # Progress bar
-  cols=$(tput cols 2>/dev/null || echo 40)
-  bar_width=$(( cols - 16 ))
+  # Refresh terminal width every 10 frames
+  COLS_TICK=$(( COLS_TICK + 1 ))
+  if [ "$CACHED_COLS" -eq 0 ] || [ $(( COLS_TICK % 10 )) -eq 0 ]; then
+    CACHED_COLS=$(tput cols 2>/dev/null || echo 40)
+  fi
+  bar_width=$(( CACHED_COLS - 16 ))
   [ "$bar_width" -lt 10 ] && bar_width=10
 
   if [ "$dur" -gt 0 ]; then
@@ -183,10 +200,7 @@ render() {
   fi
   empty=$(( bar_width - filled ))
 
-  bar=""
-  i=0; while [ $i -lt $filled ]; do bar="${bar}━"; i=$((i+1)); done
-  bar="${bar}●"
-  i=0; while [ $i -lt $empty ]; do bar="${bar}─"; i=$((i+1)); done
+  bar=$(build_bar "$filled" "$empty")
 
   if [ "$state" = "playing" ]; then
     icon="▶"
@@ -220,10 +234,22 @@ cleanup() {
 
 # ── Main loop ────────────────────────────────────────────────
 
+# Save original stty and restore on any exit
+ORIG_STTY=$(stty -g 2>/dev/null)
+
+restore_term() {
+  tput cnorm 2>/dev/null
+  [ -n "$ORIG_STTY" ] && stty "$ORIG_STTY" 2>/dev/null
+  if [ -n "$WS_ID" ]; then
+    cmux clear-status spotify --workspace "$WS_ID" 2>/dev/null
+    cmux clear-progress --workspace "$WS_ID" 2>/dev/null
+  fi
+}
+
+trap 'restore_term; exit 0' INT TERM HUP EXIT
+
 clear
 tput civis 2>/dev/null
-trap cleanup INT TERM
-
 stty -echo -icanon min 0 time 0 2>/dev/null
 
 while true; do
@@ -233,7 +259,7 @@ while true; do
     key=$(dd bs=1 count=1 2>/dev/null)
     if [ -n "$key" ]; then
       case "$key" in
-        q|Q) cleanup ;;
+        q|Q) exit 0 ;;
         ' ')
           case "$OS" in
             Darwin) spotify_cmd "playpause" ;;
