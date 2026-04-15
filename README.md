@@ -1,57 +1,65 @@
 # cmux-spotify
 
-Show your currently playing Spotify track in [cmux](https://cmux.dev)'s sidebar — right next to your Claude Code session.
+A Spotify mini-player that lives inside [cmux](https://cmux.dev)'s sidebar — right next to your Claude Code session.
 
 ![Spotify Green](https://img.shields.io/badge/Spotify-1DB954?style=flat&logo=spotify&logoColor=white)
 ![macOS](https://img.shields.io/badge/macOS-000000?style=flat&logo=apple&logoColor=white)
 ![Linux](https://img.shields.io/badge/Linux-FCC624?style=flat&logo=linux&logoColor=black)
-![Windows](https://img.shields.io/badge/Windows-0078D6?style=flat&logo=windows&logoColor=white)
+![Shell Script](https://img.shields.io/badge/Shell-Script-121011?style=flat&logo=gnu-bash&logoColor=white)
 
 ## What it does
 
-A background script that polls Spotify and updates the cmux sidebar in real time.
+Creates a dedicated Spotify workspace at the bottom of your cmux sidebar.
 
+**Sidebar** — always visible while you code:
 - `♫ Track - Artist` in Spotify green (`#1DB954`) when playing
 - `⏸ Track - Artist` in gray when paused
-- Automatically clears when Spotify is closed
-- Configurable poll interval (default: 3 seconds)
+- Progress bar showing playback position
+- Marquee scroll when the song title is too long
+
+**Click into it** — interactive TUI player:
+- Track, artist, album display with progress bar
+- Keyboard controls: `space` play/pause, `n` next, `p` previous, `q` quit
+
+Automatically hides when Spotify is not running.
 
 ## Installation
 
-### 1. Download
+### 1. Clone
 
 ```bash
-curl -o ~/.cmux-spotify.sh \
-  https://raw.githubusercontent.com/stoneHee99/cmux-spotify/main/cmux-spotify.sh
-chmod +x ~/.cmux-spotify.sh
+git clone https://github.com/stoneHee99/cmux-spotify.git ~/projects/cmux-spotify
 ```
 
-### 2. Run
+### 2. Launch
 
 ```bash
-# Start in background
-nohup ~/.cmux-spotify.sh &
-
-# Or with a custom interval (seconds)
-nohup ~/.cmux-spotify.sh --interval 2 &
+sh ~/projects/cmux-spotify/launch.sh
 ```
 
-### 3. Auto-start (optional)
+A "Spotify" workspace appears at the bottom of your cmux sidebar.
 
-To start automatically when you open cmux, add to your shell profile (`~/.zshrc` or `~/.bashrc`):
+### 3. Auto-start on cmux launch
+
+Add this to `~/.zshrc` (or `~/.bashrc`):
 
 ```bash
-# Start cmux-spotify if inside cmux and not already running
-if [ -n "$CMUX_WORKSPACE_ID" ] && ! pgrep -f cmux-spotify.sh >/dev/null; then
-  nohup ~/.cmux-spotify.sh >/dev/null 2>&1 &
+# cmux-spotify: auto-start Spotify workspace in cmux
+if [ -n "$CMUX_WORKSPACE_ID" ] && ! pgrep -f spotify-tui.sh >/dev/null 2>&1; then
+  sh ~/projects/cmux-spotify/launch.sh >/dev/null 2>&1 &
 fi
 ```
 
-### Stop
+Now every time you open cmux, the Spotify workspace is automatically created at the bottom.
 
-```bash
-pkill -f cmux-spotify.sh
-```
+## Keyboard controls (inside the TUI)
+
+| Key | Action |
+|---|---|
+| `space` | Play / Pause |
+| `n` | Next track |
+| `p` | Previous track |
+| `q` | Quit player |
 
 ## Platform support
 
@@ -59,7 +67,6 @@ pkill -f cmux-spotify.sh
 |---|---|---|
 | macOS | AppleScript (`osascript`) | Spotify desktop app |
 | Linux | [playerctl](https://github.com/altdesktop/playerctl) (MPRIS/D-Bus) | `playerctl`, Spotify desktop app |
-| Windows | Window title reading (via PowerShell) | Spotify desktop app, Git Bash or WSL |
 
 ### Linux: Install playerctl
 
@@ -74,28 +81,22 @@ sudo pacman -S playerctl
 sudo dnf install playerctl
 ```
 
-### Windows note
-
-When Spotify is paused on Windows, the window title changes to just "Spotify", so the track name is not available in paused state.
-
 ## How it works
 
-The script runs a simple loop:
+`launch.sh` creates a cmux workspace running `spotify-tui.sh`, which does two things simultaneously:
 
-1. Check if Spotify is running
-2. Read the current track, artist, and playback state using OS-native methods
-3. Call `cmux set-status spotify "..."` to update the sidebar
-4. Sleep for the configured interval
-5. On exit (`Ctrl+C` / `kill`), automatically clears the status via `cmux clear-status`
+1. **Updates the sidebar** — calls `cmux set-status` and `cmux set-progress` every second to show the current track and progress in the sidebar pill
+2. **Renders a TUI** — draws an interactive player inside the workspace with progress bar and keyboard controls
 
-Only updates the sidebar when the track actually changes, so it's lightweight.
+Data is fetched using OS-native methods (AppleScript on macOS, playerctl on Linux) with a single call per cycle to minimize overhead. The display uses cursor repositioning instead of screen clearing to prevent flicker.
 
-## cmux commands used
+## Files
 
-```bash
-cmux set-status spotify "♫ Track - Artist" --color "#1DB954"  # set
-cmux clear-status spotify                                      # clear
-cmux list-status                                               # check
+```
+├── launch.sh         # Creates the Spotify workspace in cmux
+├── spotify-tui.sh    # TUI player + sidebar updater
+├── LICENSE
+└── README.md
 ```
 
 ## License
