@@ -162,11 +162,11 @@ render() {
   info=$(get_all_info)
 
   # Parse all fields in one pass using parameter expansion (no subprocesses)
-  state="${info%%$SEP*}"; info="${info#*$SEP}"
-  track="${info%%$SEP*}"; info="${info#*$SEP}"
-  artist="${info%%$SEP*}"; info="${info#*$SEP}"
-  album="${info%%$SEP*}"; info="${info#*$SEP}"
-  pos="${info%%$SEP*}"; info="${info#*$SEP}"
+  state="${info%%"$SEP"*}"; info="${info#*"$SEP"}"
+  track="${info%%"$SEP"*}"; info="${info#*"$SEP"}"
+  artist="${info%%"$SEP"*}"; info="${info#*"$SEP"}"
+  album="${info%%"$SEP"*}"; info="${info#*"$SEP"}"
+  pos="${info%%"$SEP"*}"; info="${info#*"$SEP"}"
   dur="$info"
 
   pos=${pos:-0}
@@ -233,6 +233,12 @@ cleanup() {
 }
 
 # ── Main loop ────────────────────────────────────────────────
+
+# Allow sourcing for tests without running main loop
+# shellcheck disable=SC2317
+if [ "${CMUX_SPOTIFY_TEST:-0}" = "1" ]; then
+  return 0 2>/dev/null || exit 0
+fi
 
 # Save original stty and restore on any exit
 ORIG_STTY=$(stty -g 2>/dev/null)
