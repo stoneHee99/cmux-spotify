@@ -1,6 +1,6 @@
 # cmux-spotify
 
-A Spotify mini-player that lives inside [cmux](https://cmux.dev)'s sidebar — right next to your Claude Code session.
+A Spotify mini-player that lives inside [cmux](https://cmux.dev)'s sidebar.
 
 ![Spotify Green](https://img.shields.io/badge/Spotify-1DB954?style=flat&logo=spotify&logoColor=white)
 ![macOS](https://img.shields.io/badge/macOS-000000?style=flat&logo=apple&logoColor=white)
