@@ -15,11 +15,9 @@
   <img src="https://img.shields.io/badge/Shell-Script-121011?style=flat&logo=gnu-bash&logoColor=white" />
 </p>
 
-<!-- demo GIF: uncomment when assets/demo.gif is added
 <p align="center">
-  <img src="assets/demo.gif" width="800" />
+  <img src="assets/demo.png" width="800" />
 </p>
--->
 
 ## What it does
 
