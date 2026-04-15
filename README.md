@@ -21,13 +21,13 @@ bagseoghui@host  ~/project  ⎇ main  Opus 4.6  ctx:25%  ♫ Dynamite - BTS  14:
 ```bash
 # macOS / Linux
 curl -o ~/.claude/spotify-now-playing.sh \
-  https://raw.githubusercontent.com/bfrfrr/claude-code-spotify/main/spotify-now-playing.sh
+  https://raw.githubusercontent.com/stoneHee99/claude-code-spotify/main/spotify-now-playing.sh
 chmod +x ~/.claude/spotify-now-playing.sh
 ```
 
 ```powershell
 # Windows (PowerShell)
-Invoke-WebRequest -Uri "https://raw.githubusercontent.com/bfrfrr/claude-code-spotify/main/spotify-now-playing.ps1" `
+Invoke-WebRequest -Uri "https://raw.githubusercontent.com/stoneHee99/claude-code-spotify/main/spotify-now-playing.ps1" `
   -OutFile "$env:USERPROFILE\.claude\spotify-now-playing.ps1"
 ```
 
